@@ -1,21 +1,52 @@
 version: '3'
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-14}-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+  web:
+    container_name: application_web
     volumes:
-      - db-data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - ./:/var/www
+    build:
+      context: 'docker/nginx'
+    ports:
+      - "8080:80"
+    networks:
+      - symfony
 
-volumes:
-###> doctrine/doctrine-bundle ###
-  db-data:
-###< doctrine/doctrine-bundle ###
+  php:
+    container_name: application_php
+    restart: always
+    build:
+      context: 'docker/php'
+    volumes:
+      - ./:/var/www
+    working_dir: /var/www
+    networks:
+      - symfony
+
+  db:
+    container_name: application_db
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+    networks:
+      - symfony
+
+  phpmyadmin:
+    container_name: application_phpmyadmin
+    image: phpmyadmin:latest
+    restart: always
+    ports:
+      - "8081:80"
+    networks:
+      - symfony
+    depends_on:
+      - db
+
+networks:
+  symfony:
