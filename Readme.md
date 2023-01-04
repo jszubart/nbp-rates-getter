@@ -1,1 +1,1 @@
-Innovation Software recruitment task
+NBP rated getter
