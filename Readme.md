@@ -1,1 +1,1 @@
-NBP rated getter
+NBP rates getter
